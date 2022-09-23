@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="theme-color" content="#000000">
+
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="shortcut icon" href="./favicon.png">
+
+    <script src="https://cdn.jsdelivr.net/npm/@algolia/autocomplete-js"></script>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@algolia/autocomplete-theme-classic"/>
+    <script src="https://cdn.jsdelivr.net/npm/typesense@1/dist/typesense.min.js"></script>
+
+    <title>Typesense Autocomplete Demo</title>
+</head>
+
+<body>
+<header class="header">
+    <h1 class="header-title">
+        Autocomplete Demo
+    </h1>
+    <p class="header-subtitle">
+        using
+        <a href="https://typesense.org" target="_blank">
+            Typesense
+        </a> +
+        <a href="https://github.com/algolia/autocomplete" target="_blank">
+            Autocomplete.js
+        </a>
+    </p>
+</header>
+
+<div class="container">
+    <div class="search-panel">
+        <div id="autocomplete"></div>
+    </div>
+
+</div>
+
+
+<script>
+    let typesenseClient = new Typesense.Client({
+        'nearestNode': {'host': 'qtg5aekc2iosjh93p-1.a1.typesense.net', 'port': '443', 'protocol': 'https'},
+        'nodes': [
+            {'host': 'qtg5aekc2iosjh93p-1.a1.typesense.net', 'port': '443', 'protocol': 'https'},
+            {'host': 'qtg5aekc2iosjh93p-2.a1.typesense.net', 'port': '443', 'protocol': 'https'},
+            {'host': 'qtg5aekc2iosjh93p-3.a1.typesense.net', 'port': '443', 'protocol': 'https'},
+        ],
+        'apiKey': '8hLCPSQTYcBuK29zY5q6Xhin7ONxHy99',
+        'connectionTimeoutSeconds': 2
+    })
+
+
+    const {autocomplete} = window['@algolia/autocomplete-js'];
+    autocomplete({
+        container: '#autocomplete',
+        placeholder: 'Search for cell phones and accessories. Eg: Apple, charger',
+        async getSources({query}) {
+            const results = await typesenseClient.collections('products').documents().search({
+                q: query,
+                query_by: 'name',
+                highlight_full_fields: 'name'
+            })
+
+            return [
+                {
+                    sourceId: 'predictions',
+                    getItems() {
+                        return results.hits;
+                    },
+                    getItemInputValue({item}) {
+                        return item.document.name;
+                    },
+                    templates: {
+                        item({ item, html }) {
+                            // html is from the `htm` package. Docs: https://github.com/developit/htm
+
+                            // Get the highlighted HTML fragment from Typesense results
+                            const html_fragment = html`${item.highlights.find(h => h.field === 'name').value}`
+
+                            // Send the html_fragment to `html` tagged template
+                            // Reference: https://github.com/developit/htm/issues/226#issuecomment-1205526098
+                            return html`<div dangerouslySetInnerHTML=${{ __html: html_fragment }}></div>`
+                        },
+                        noResults() {
+                            return 'No results found.';
+                        },
+                    },
+                },
+            ];
+        },
+    });
+</script>
+</body>
+</html>
