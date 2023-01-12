@@ -79,7 +79,7 @@
                             // html is from the `htm` package. Docs: https://github.com/developit/htm
 
                             // Get the highlighted HTML fragment from Typesense results
-                            const html_fragment = html`${item.highlights.find(h => h.field === 'name').value}`
+                            const html_fragment = html`${item.highlights.find(h => h.field === 'name' || {}).value || item.document['name']}`
 
                             // Send the html_fragment to `html` tagged template
                             // Reference: https://github.com/developit/htm/issues/226#issuecomment-1205526098
