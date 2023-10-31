@@ -62,7 +62,8 @@
             const results = await typesenseClient.collections('products').documents().search({
                 q: query,
                 query_by: 'name',
-                highlight_full_fields: 'name'
+                highlight_full_fields: 'name',
+                include_fields: 'name'
             })
 
             return [
